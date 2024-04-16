@@ -30,11 +30,12 @@
 </div>
 
 <button onclick="shufflePuzzle()">Embaralhar</button>
+<button onclick="showHint()">Dica</button> <!-- Botão de dica adicionado -->
+
 <script>
   const puzzleContainer = document.getElementById('puzzle-container');
   const puzzleImage = document.getElementById('puzzle-image');
   const gridSize = 3;
-
   let pieceWidth, pieceHeight, emptyPiece;
 
   function createPuzzle() {
@@ -46,7 +47,6 @@
       piecesPositions.push(i);
     }
 
-    // Shuffle pieces positions
     for (let i = piecesPositions.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [piecesPositions[i], piecesPositions[j]] = [piecesPositions[j], piecesPositions[i]];
@@ -82,7 +82,7 @@
           emptyPiece.style.left = pieceWidth * j + 'px';
           emptyPiece.dataset.row = i;
           emptyPiece.dataset.col = j;
-          emptyPiece.style.opacity = '0'; // Adicionado para ocultar a peça vazia inicialmente
+          emptyPiece.style.opacity = '0'; 
 
           puzzleContainer.appendChild(emptyPiece);
         }
@@ -147,6 +147,20 @@
     }
     return true;
   }
+
+function showHint() {
+    const hintOptions = ["Finalize o puzzle primeiro.", "Parece que faltou uma peça para completar o quebra-cabeça, por que você não tenta adicionar manualmente?"];
+
+    const selectedOption = prompt("Você finalizou o puzzle?(Use os números para escolher) \n\n1. Não.\n2. Sim.");
+
+    if (selectedOption === "1") {
+        alert(hintOptions[0]);
+    } else if (selectedOption === "2") {
+        alert(hintOptions[1]);
+    } else {
+        alert("Opção inválida.");
+    }
+}
 
   createPuzzle();
 </script>
