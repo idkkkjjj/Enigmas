@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlidePuzzle</title>
+<style>
+  .puzzle-container {
+    width: 300px;
+    height: 300px;
+    border: 2px solid black;
+    margin: 20px auto;
+    position: relative;
+    overflow: hidden;
+  }
+  .puzzle-piece {
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="puzzle-container" id="puzzle-container">
+
+  <img src="./morse.png" alt="Senha" id="puzzle-image">
+</div>
+
+<button onclick="shufflePuzzle()">Embaralhar</button>
+<script>
+  const puzzleContainer = document.getElementById('puzzle-container');
+  const puzzleImage = document.getElementById('puzzle-image');
+  const gridSize = 3;
+
+  let pieceWidth, pieceHeight, emptyPiece;
+
+  function createPuzzle() {
+    pieceWidth = puzzleContainer.offsetWidth / gridSize;
+    pieceHeight = puzzleContainer.offsetHeight / gridSize;
+
+    let piecesPositions = [];
+    for (let i = 0; i < gridSize * gridSize - 1; i++) {
+      piecesPositions.push(i);
+    }
+
+    // Shuffle pieces positions
+    for (let i = piecesPositions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [piecesPositions[i], piecesPositions[j]] = [piecesPositions[j], piecesPositions[i]];
+    }
+
+    for (let i = 0; i < gridSize; i++) {
+      for (let j = 0; j < gridSize; j++) {
+        if (i !== gridSize - 1 || j !== gridSize - 1) {
+          const positionIndex = i * gridSize + j;
+          if (positionIndex < piecesPositions.length) {
+            const piece = document.createElement('div');
+            piece.className = 'puzzle-piece';
+            piece.style.width = pieceWidth + 'px';
+            piece.style.height = pieceHeight + 'px';
+            piece.style.backgroundImage = `url('${puzzleImage.src}')`;
+            piece.style.backgroundSize = `${puzzleContainer.offsetWidth}px ${puzzleContainer.offsetHeight}px`;
+            piece.style.backgroundPosition = `-${pieceWidth * (piecesPositions[positionIndex] % gridSize)}px -${pieceHeight * Math.floor(piecesPositions[positionIndex] / gridSize)}px`;
+            piece.style.top = pieceHeight * i + 'px';
+            piece.style.left = pieceWidth * j + 'px';
+            piece.dataset.row = i;
+            piece.dataset.col = j;
+
+            piece.addEventListener('click', movePiece);
+
+            puzzleContainer.appendChild(piece);
+          }
+        } else {
+          emptyPiece = document.createElement('div');
+          emptyPiece.className = 'puzzle-piece empty';
+          emptyPiece.style.width = pieceWidth + 'px';
+          emptyPiece.style.height = pieceHeight + 'px';
+          emptyPiece.style.top = pieceHeight * i + 'px';
+          emptyPiece.style.left = pieceWidth * j + 'px';
+          emptyPiece.dataset.row = i;
+          emptyPiece.dataset.col = j;
+          emptyPiece.style.opacity = '0'; // Adicionado para ocultar a peça vazia inicialmente
+
+          puzzleContainer.appendChild(emptyPiece);
+        }
+      }
+    }
+  }
+
+  function shufflePuzzle() {
+    const puzzlePieces = document.querySelectorAll('.puzzle-piece:not(.empty)');
+    const shuffledPositions = Array.from(Array(puzzlePieces.length).keys()).sort(() => Math.random() - 0.5);
+
+    puzzlePieces.forEach((piece, index) => {
+      const newPosition = shuffledPositions[index];
+      const row = Math.floor(newPosition / gridSize);
+      const col = newPosition % gridSize;
+      piece.style.top = pieceHeight * row + 'px';
+      piece.style.left = pieceWidth * col + 'px';
+      piece.dataset.row = row;
+      piece.dataset.col = col;
+    });
+  }
+
+  function movePiece() {
+    const currentPiece = this;
+    const emptyRow = parseInt(emptyPiece.dataset.row);
+    const emptyCol = parseInt(emptyPiece.dataset.col);
+    const currentRow = parseInt(currentPiece.dataset.row);
+    const currentCol = parseInt(currentPiece.dataset.col);
+    const rowDiff = Math.abs(emptyRow - currentRow);
+    const colDiff = Math.abs(emptyCol - currentCol);
+
+    if ((rowDiff === 1 && colDiff === 0) || (colDiff === 1 && rowDiff === 0)) {
+      const tempRow = currentPiece.style.top;
+      const tempCol = currentPiece.style.left;
+      currentPiece.style.top = emptyPiece.style.top;
+      currentPiece.style.left = emptyPiece.style.left;
+      emptyPiece.style.top = tempRow;
+      emptyPiece.style.left = tempCol;
+      currentPiece.dataset.row = emptyRow;
+      currentPiece.dataset.col = emptyCol;
+      emptyPiece.dataset.row = currentRow;
+      emptyPiece.dataset.col = currentCol;
+
+      if (checkWin()) {
+        emptyPiece.style.backgroundImage = `url('${puzzleImage.src}')`;
+        emptyPiece.style.backgroundSize = `${puzzleContainer.offsetWidth}px ${puzzleContainer.offsetHeight}px`;
+        emptyPiece.style.backgroundPosition = `-${pieceWidth * (gridSize - 1)}px -${pieceHeight * (gridSize - 1)}px`;
+        emptyPiece.style.opacity = '1';
+        alert('Puzzle completo, escaneie o QR CODE para receber a senha');
+      }
+    }
+  }
+
+  function checkWin() {
+    const pieces = document.querySelectorAll('.puzzle-piece');
+    for (let i = 0; i < pieces.length - 1; i++) {
+      const row = parseInt(pieces[i].dataset.row);
+      const col = parseInt(pieces[i].dataset.col);
+      if (row !== Math.floor(i / gridSize) || col !== i % gridSize) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  createPuzzle();
+</script>
+</body>
+</html>
